@@ -1,0 +1,21 @@
+{
+  "name": "auth-service",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Saurabh Kushwaha",
+  "main": "server.ts",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "dev": "ts-node-dev src/server.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@fastify/env": "^5.0.2",
+    "fastify": "^5.6.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0"
+  }
+}
