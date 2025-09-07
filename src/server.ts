@@ -1,16 +1,16 @@
 import Fastify from "fastify";
 import fastifyEnv from "@fastify/env";
 import { envOptions } from "./config/index";
-
+import routes from "./routes";
 
 const app = Fastify({ logger: true });
 
 async function startServer() {
   await app.register(fastifyEnv, envOptions);
-  await app.ready(); //
-
-  // app.route("/")
-
+  
+  await app.register(routes, { prefix: "/api" });
+  
+  // await app.ready(); //  Fastify will call .ready() internally before listen
   app.listen({ port: app.config.PORT }, (err, address) => {
     if (err) {
       console.error(err);
