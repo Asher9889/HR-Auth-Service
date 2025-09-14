@@ -10,6 +10,7 @@ export interface IUser extends Document {
   role: "Admin" | "Manager" | "Employee" | "User" | "HR";
   status: 'Active' | 'Inactive' | 'Suspended';
   lastLogin?: Date;
+  profileCompleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,6 +51,10 @@ const userSchema = new Schema<IUser>(
     },
     lastLogin: { 
       type: Date 
+    },
+    profileCompleted: { 
+      type: Boolean, 
+      default: false 
     }
   },
   { 

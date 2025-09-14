@@ -7,13 +7,18 @@ declare module 'fastify' {
       MONGO_HOST: string;
       MONGO_DB_Name: string;
       MONGO_APPNAME: string;
+      ACCESS_TOKEN_SECRET: string;
+      REFRESH_TOKEN_SECRET: string;
+      ACCESS_TOKEN_EXPIRES_IN: string;
+      REFRESH_TOKEN_EXPIRES_IN: string;
+      COOKIE_SECRET: string;
     };
   }
 }
 
 const envSchema = {
   type: 'object',
-  required: ['PORT', "MONGO_USER", "MONGO_PASS", "MONGO_HOST", "MONGO_DB_Name", "MONGO_APPNAME"],
+  required: ['PORT', "MONGO_USER", "MONGO_PASS", "MONGO_HOST", "MONGO_DB_Name", "MONGO_APPNAME", "ACCESS_TOKEN_SECRET", "REFRESH_TOKEN_SECRET", "ACCESS_TOKEN_EXPIRES_IN", "REFRESH_TOKEN_EXPIRES_IN", "COOKIE_SECRET"],
   properties: {
     PORT: {
       type: 'number',
@@ -32,7 +37,22 @@ const envSchema = {
     },
     MONGO_APPNAME: {
       type: 'string',
-    }
+    },
+    ACCESS_TOKEN_SECRET: {
+      type: 'string',
+    },
+    REFRESH_TOKEN_SECRET: {
+      type: 'string',
+    },
+    ACCESS_TOKEN_EXPIRES_IN: {
+      type: 'string',
+    },
+    REFRESH_TOKEN_EXPIRES_IN: {
+      type: 'string',
+    },
+    COOKIE_SECRET: {
+      type: 'string',
+    },
   }
 }
 

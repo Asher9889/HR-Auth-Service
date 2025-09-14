@@ -8,7 +8,7 @@ import { FastifyRequest } from "fastify";
 
 export async function signup(req:FastifyRequest, body:authTypes.ICreateTenantBody){
     try {
-        const {firstName, lastName, email, password, companyName, domain} = body;
+        const { firstName, lastName, mobNo, email, password, companyName, domain } = body;
         // 1. Check if tenant already exists
         const existingTenant = await Tenant.findOne({ $or: [{ domain }, { "contact.email": email }] });
         if (existingTenant) {
@@ -16,13 +16,19 @@ export async function signup(req:FastifyRequest, body:authTypes.ICreateTenantBod
         }
         // 2. Create tenant
         const adminName = firstName + " " + lastName;
+        let tenantCode
+        if(companyName && companyName.trim() !== ""){
+          const firstWord = companyName.trim().split(" ")[0];
+          tenantCode = (firstWord ? firstWord.toUpperCase() : "TENANT") + Date.now();        
+        }
+
         const tenant = new Tenant({
           name: companyName,
           domain,
-          tenantCode: companyName.substring(0, 4).toUpperCase() + Date.now(), // simple code generator
-          contact: { adminName: adminName, email },
-          subscription: { plan: "Free", status: "Active", startDate: new Date(), maxUsers: 50, features: [] },
-          preferences: { timezone: "Asia/Kolkata", dateFormat: "DD-MM-YYYY", currency: "INR", language: "en" },
+          tenantCode: tenantCode, // simple code generator
+          contact: { adminName: adminName, email, mobNo },
+          // subscription: { plan: "Free", status: "Active", startDate: new Date(), maxUsers: 50, features: [] },
+          // preferences: { timezone: "Asia/Kolkata", dateFormat: "DD-MM-YYYY", currency: "INR", language: "en" },
         });
         const savedTenant = await tenant.save();
     
@@ -47,9 +53,6 @@ export async function signup(req:FastifyRequest, body:authTypes.ICreateTenantBod
     
         return { savedTenant, savedUser };
     } catch (error) {
-        if(error instanceof ApiErrorResponse){
-            throw error;
-        }
-        throw new ApiErrorResponse(StatusCodes.INTERNAL_SERVER_ERROR, authMsg.error);
+       throw error;
     }
 }

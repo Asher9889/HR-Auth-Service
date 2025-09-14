@@ -1,5 +1,6 @@
 import { Schema, model, Document, Model, Types } from "mongoose";
 
+// -------------------- INTERFACES --------------------
 export interface ISubscription {
   plan: "Free" | "Pro" | "Enterprise";
   status: "Active" | "Inactive" | "Cancelled";
@@ -12,6 +13,7 @@ export interface ISubscription {
 export interface IPreferences {
   timezone: string;
   dateFormat: string;
+  timeFormat: "12h" | "24h";
   currency: string;
   language: string;
 }
@@ -19,7 +21,7 @@ export interface IPreferences {
 export interface IContact {
   adminName: string;
   email: string;
-  phone?: string;
+  mobNo: string;
 }
 
 export interface IAddress {
@@ -31,8 +33,24 @@ export interface IAddress {
   zip: string;
 }
 
+export interface IRole {
+  name: string;                 // Admin, Manager, Employee
+  permissions: string[];        // List of permission keys
+}
+
+export interface IDepartment {
+  name: string;
+  description?: string;
+}
+
+export interface ITeam {
+  name: string;
+  departmentId: Types.ObjectId;
+  members: Types.ObjectId[];
+}
+
 export interface ITenant extends Document {
-  _id: Types.ObjectId;   // 👈 tells TS that _id is always ObjectId
+  _id: Types.ObjectId;
   name: string;
   domain?: string;
   tenantCode: string;
@@ -40,11 +58,14 @@ export interface ITenant extends Document {
   address?: IAddress;
   subscription: ISubscription;
   preferences: IPreferences;
+  roles: IRole[];
+  departments: IDepartment[];
+  teams: ITeam[];
   status: "Active" | "Suspended" | "Deleted";
+  companySetupDone: boolean;
   createdAt: Date;
   updatedAt: Date;
 
-  // Instance methods
   hasFeature(feature: string): boolean;
   isSubscriptionActive(): boolean;
   setStatus(newStatus: "Active" | "Suspended" | "Deleted"): Promise<ITenant>;
@@ -55,16 +76,19 @@ export interface ITenantModel extends Model<ITenant> {
   findByCode(code: string): Promise<ITenant | null>;
 }
 
+// -------------------- SCHEMA --------------------
 const tenantSchema = new Schema<ITenant, ITenantModel>(
   {
     name: { type: String, required: true, trim: true },
     domain: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
     tenantCode: { type: String, unique: true, required: true, uppercase: true },
+
     contact: {
       adminName: { type: String, required: true },
       email: { type: String, required: true, lowercase: true, trim: true },
-      phone: { type: String },
+      mobNo: { type: String },
     },
+
     address: {
       line1: { type: String },
       line2: { type: String },
@@ -73,27 +97,53 @@ const tenantSchema = new Schema<ITenant, ITenantModel>(
       country: { type: String },
       zip: { type: String },
     },
+
     subscription: {
       plan: { type: String, enum: ["Free", "Pro", "Enterprise"], default: "Free" },
       status: { type: String, enum: ["Active", "Inactive", "Cancelled"], default: "Active" },
       startDate: { type: Date, default: Date.now },
       endDate: { type: Date },
-      maxUsers: { type: Number, default: 50 },
+      maxUsers: { type: Number, default: 20 },
       features: [{ type: String }],
     },
+
     preferences: {
       timezone: { type: String, default: "Asia/Kolkata" },
       dateFormat: { type: String, default: "DD-MM-YYYY" },
+      timeFormat: { type: String, enum: ["12h", "24h"], default: "24h" },
       currency: { type: String, default: "INR" },
       language: { type: String, default: "en" },
     },
+
+    roles: [
+      {
+        name: { type: String, required: true },
+        permissions: [{ type: String }],
+      }
+    ],
+
+    departments: [
+      {
+        name: { type: String, required: true },
+        description: { type: String },
+      }
+    ],
+
+    teams: [
+      {
+        name: { type: String, required: true },
+        departmentId: { type: Schema.Types.ObjectId, ref: "Department" },
+        members: [{ type: Schema.Types.ObjectId, ref: "User" }],
+      }
+    ],
+
     status: { type: String, enum: ["Active", "Suspended", "Deleted"], default: "Active" },
+    companySetupDone: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
 // -------------------- INDEXES --------------------
-// tenantSchema.index({ domain: 1 }, { unique: true, sparse: true });
 tenantSchema.index({ tenantCode: 1 }, { unique: true });
 tenantSchema.index({ status: 1 });
 
@@ -104,15 +154,12 @@ tenantSchema.methods.hasFeature = function (feature: string): boolean {
 
 tenantSchema.methods.isSubscriptionActive = function (): boolean {
   const now = new Date();
-  return (
-    this.subscription.status === "Active" &&
-    (!this.subscription.endDate || now <= this.subscription.endDate)
-  );
+  return this.subscription.status === "Active" && (!this.subscription.endDate || now <= this.subscription.endDate);
 };
 
 tenantSchema.methods.setStatus = async function (
-    this: ITenant, 
-    newStatus: "Active" | "Suspended" | "Deleted"
+  this: ITenant,
+  newStatus: "Active" | "Suspended" | "Deleted"
 ): Promise<ITenant> {
   this.status = newStatus;
   await this.save();
@@ -130,5 +177,4 @@ tenantSchema.statics.findByCode = function (code: string) {
 
 // -------------------- MODEL --------------------
 const Tenant = model<ITenant, ITenantModel>("Tenant", tenantSchema);
-
 export default Tenant;
