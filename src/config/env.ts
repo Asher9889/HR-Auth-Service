@@ -2,17 +2,36 @@ declare module 'fastify' {
   interface FastifyInstance {
     config: {
       PORT: number;
-      // DATABASE_URL: string;
+      MONGO_USER: string;
+      MONGO_PASS: string;
+      MONGO_HOST: string;
+      MONGO_DB_Name: string;
+      MONGO_APPNAME: string;
     };
   }
 }
 
 const envSchema = {
   type: 'object',
-  required: ['PORT'],
+  required: ['PORT', "MONGO_USER", "MONGO_PASS", "MONGO_HOST", "MONGO_DB_Name", "MONGO_APPNAME"],
   properties: {
     PORT: {
       type: 'number',
+    },
+    MONGO_USER: {
+      type: 'string',
+    },
+    MONGO_PASS: {
+      type: 'string',
+    },
+    MONGO_HOST: {
+      type: 'string',
+    },
+    MONGO_DB_Name: {
+      type: 'string',
+    },
+    MONGO_APPNAME: {
+      type: 'string',
     }
   }
 }

@@ -1,13 +1,15 @@
 import Fastify from "fastify";
 import fastifyEnv from "@fastify/env";
-import { envOptions } from "./config/index";
+import { connectMongoDB, envOptions } from "./config/index";
 import routes from "./routes";
+import { jwtPlugin } from "./plugins";
 
 const app = Fastify({ logger: true });
 
 async function startServer() {
   await app.register(fastifyEnv, envOptions);
-  
+  await connectMongoDB(app)
+  await app.register(jwtPlugin);
   await app.register(routes, { prefix: "/api" });
   
   // await app.ready(); //  Fastify will call .ready() internally before listen

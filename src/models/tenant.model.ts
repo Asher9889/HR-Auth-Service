@@ -1,6 +1,5 @@
-import { Schema, model, Document, Model } from "mongoose";
+import { Schema, model, Document, Model, Types } from "mongoose";
 
-// -------------------- INTERFACES --------------------
 export interface ISubscription {
   plan: "Free" | "Pro" | "Enterprise";
   status: "Active" | "Inactive" | "Cancelled";
@@ -32,8 +31,8 @@ export interface IAddress {
   zip: string;
 }
 
-// Document type (instance)
 export interface ITenant extends Document {
+  _id: Types.ObjectId;   // 👈 tells TS that _id is always ObjectId
   name: string;
   domain?: string;
   tenantCode: string;
@@ -51,13 +50,11 @@ export interface ITenant extends Document {
   setStatus(newStatus: "Active" | "Suspended" | "Deleted"): Promise<ITenant>;
 }
 
-// Static methods type
 export interface ITenantModel extends Model<ITenant> {
   findByDomain(domain: string): Promise<ITenant | null>;
   findByCode(code: string): Promise<ITenant | null>;
 }
 
-// -------------------- SCHEMA --------------------
 const tenantSchema = new Schema<ITenant, ITenantModel>(
   {
     name: { type: String, required: true, trim: true },
@@ -96,7 +93,7 @@ const tenantSchema = new Schema<ITenant, ITenantModel>(
 );
 
 // -------------------- INDEXES --------------------
-tenantSchema.index({ domain: 1 }, { unique: true, sparse: true });
+// tenantSchema.index({ domain: 1 }, { unique: true, sparse: true });
 tenantSchema.index({ tenantCode: 1 }, { unique: true });
 tenantSchema.index({ status: 1 });
 
@@ -132,4 +129,6 @@ tenantSchema.statics.findByCode = function (code: string) {
 };
 
 // -------------------- MODEL --------------------
-export const Tenant = model<ITenant, ITenantModel>("Tenant", tenantSchema);
+const Tenant = model<ITenant, ITenantModel>("Tenant", tenantSchema);
+
+export default Tenant;
